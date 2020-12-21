@@ -29,10 +29,10 @@ if __name__ == "__main__":
     
     #unzip data if not done already
     if arg.extract:
-        unzip_data(config.zip_path, config.extract_path)
+        unzip_data(arg.zip_path, arg.extract_path)
 
     #make a df with n no of folds
-    df = get_df(config.img_dir, config.mask_dir, arg.fold)
+    df = get_df(arg.img_dir, arg.mask_dir, arg.fold)
 
     #get dataset
     train_dataset = dataSet(df, fold=0, train=True, transforms=transform.train_transform)
