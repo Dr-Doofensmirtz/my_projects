@@ -36,6 +36,7 @@ class UNet(nn.Module):
         self.up_conv_4 = double_conv(128, 64)
 
         self.out = nn.Conv2d(64, 1, 1)
+        self.activation = nn.Softmax2d()
 
     def forward(self, image):
         #encoder
@@ -60,6 +61,7 @@ class UNet(nn.Module):
         y = self.up_conv_4(torch.cat([x1, x], 1))
 
         x = self.out(y)
+        x = self.activation(x)
 
         return x
 

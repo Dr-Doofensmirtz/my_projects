@@ -9,7 +9,6 @@ from dataset import dataSet
 from transforms import transform
 from models import UNet
 from loss import DiceLoss
-from config import config
 from utils import *
 from train import train_one_epoch
 
@@ -18,6 +17,10 @@ def argparser():
     parser.add_argument('epoch', type = int)
     parser.add_argument('extract', type=bool)
     parser.add_argument('fold', type=int)
+    parser.add_argument('img_dir', type=str)
+    parser.add_argument('mask_dir', type=str)
+    parser.add_argument('zip_path', type=str)
+    parser.add_argument('unzip_path', type=str)
 
     return parser.parse_args()
 

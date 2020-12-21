@@ -1,6 +1,8 @@
 import torch
 from tqdm.auto import tqdm as tq
+import numpy as np
 
+from utils import visualize_predict
 def train_one_epoch(epoch, model, train_loader, valid_loader, optimizer, criterion, scheduler, train_on_gpu=False):
     # keep track of training and validation loss
     train_loss = 0.0
@@ -45,12 +47,12 @@ def train_one_epoch(epoch, model, train_loader, valid_loader, optimizer, criteri
             # calculate the batch loss
             loss = criterion(output, target)
             bar.set_postfix(ordered_dict={"valid_loss":loss.item()})
-    
+            
     # calculate average losses
     train_loss = train_loss/len(train_loader.dataset)
     valid_loss = valid_loss/len(valid_loader.dataset)
 
-    
+    visualize_predict(model,valid_loader,3)
     # print training/validation statistics 
     print('Epoch: {}  Training Loss: {:.6f}  Validation Loss: {:.6f}'.format(
         epoch, train_loss, valid_loss))
