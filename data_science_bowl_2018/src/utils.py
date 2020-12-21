@@ -1,4 +1,6 @@
 import os
+import glob
+import zipfile
 
 import numpy as np
 import pandas as pd
@@ -22,20 +24,21 @@ def get_mask(mask_dir, IMG_HEIGHT, IMG_WIDTH):
         mask = np.maximum(mask, mask_)
     return mask
 
-def get_folds(df, num_folds=5):
+def get_df(img_dir, mask_dir, num_folds=5):
     '''
-    this func will create a csv containing n folds of the given dataset.
+    this func will create a df containing n folds of the given dataset.
     '''
+    data = {"img_": glob.glob(img_dir), "mask_": glob.glob(mask_dir)}
+    df = pd.DataFrame(data=data)
+    df['kfold'] = -1
+    df = df.sample(frac=1).reset_index(drop=True)
+    kf = model_selection.KFold(n_splits=num_folds)
 
-  df['kfold'] = -1
-  df = df.sample(frac=1).reset_index(drop=True)
-  kf = model_selection.KFold(n_splits=num_folds)
+    for fold_, (_, x) in enumerate(kf.split(df)):
+        for xs in x:
+            df.loc[xs, "kfold"] = fold_
 
-  for fold_, (_, x) in enumerate(kf.split(df)):
-      for xs in x:
-          df.loc[xs, "kfold"] = fold_
-
-  df.to_csv("")
+    return df
 
 def format_image(img):
     '''
@@ -60,24 +63,24 @@ def show_dataset(dataset, n=5):
     '''
     this will display n no of (img, mask) pair from the dataset.
     '''
-  _ , ax = plt.subplots(n, 2,figsize=(n*3,8))
+    _ , ax = plt.subplots(n, 2,figsize=(n*3,8))
 
-  for i in range(n):
-    x ,y = dataset.__getitem__(np.random.randint(0,30))
-    x = format_image(x)
-    y = format_mask(y)
-    ax[i, 0].imshow(x)
-    ax[i, 1].imshow(y, interpolation="nearest", cmap="gray")
-    # ax[i, 0].set_title("Ground Truth Image")
-    # ax[i, 1].set_title("Mask")
-    ax[i, 0].set_axis_off()
-    ax[i, 1].set_axis_off()
-  plt.tight_layout()
-  plt.show()
+    for i in range(n):
+        x ,y = dataset.__getitem__(np.random.randint(0,30))
+        x = format_image(x)
+        y = format_mask(y)
+        ax[i, 0].imshow(x)
+        ax[i, 1].imshow(y, interpolation="nearest", cmap="gray")
+        # ax[i, 0].set_title("Ground Truth Image")
+        # ax[i, 1].set_title("Mask")
+        ax[i, 0].set_axis_off()
+        ax[i, 1].set_axis_off()
+    plt.tight_layout()
+    plt.show()
 
 def unzip_data(path_to_zip_file, DATA_PATH):
     '''
     unzip the data files.
     '''
-    with zipfile.Zipfile(path_to_zip_file, "r") as data:
-        data.extract_all(DATA_PATH)
+    with zipfile.ZipFile(path_to_zip_file, "r") as data:
+        data.extractall(DATA_PATH)

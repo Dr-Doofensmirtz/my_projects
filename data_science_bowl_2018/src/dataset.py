@@ -2,7 +2,7 @@ import pandas as pd
 
 from skimage.io import imread
 
-from .utils import get_mask
+from utils import get_mask
 
 import torch.nn as nn
 
