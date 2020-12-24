@@ -2,15 +2,14 @@
 
 import torch
 import torch.nn as nn
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 def double_conv(in_c, out_c):
     conv = nn.Sequential(
-        nn.ZeroPad2d(1),
-        nn.Conv2d(in_c, out_c, kernel_size=3),
+        nn.Conv2d(in_c, out_c, kernel_size=3, padding =1),
         nn.ReLU(inplace=True),
-        nn.ZeroPad2d(1),
-        nn.Conv2d(out_c, out_c, kernel_size=3),
+        nn.Conv2d(out_c, out_c, kernel_size=3, padding=1),
         nn.ReLU(inplace=True)
     )
     return conv
@@ -36,7 +35,6 @@ class UNet(nn.Module):
         self.up_conv_4 = double_conv(128, 64)
 
         self.out = nn.Conv2d(64, 1, 1)
-        self.activation = nn.Softmax2d()
 
     def forward(self, image):
         #encoder
@@ -61,7 +59,6 @@ class UNet(nn.Module):
         y = self.up_conv_4(torch.cat([x1, x], 1))
 
         x = self.out(y)
-        x = self.activation(x)
+        x = torch.sigmoid(x)
 
         return x
-

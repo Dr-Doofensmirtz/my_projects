@@ -8,6 +8,8 @@ import pandas as pd
 from skimage.io import imread, imshow
 from skimage.transform import resize
 
+from torch.utils.data import random_split,DataLoader
+
 from sklearn import model_selection
 import matplotlib.pyplot as plt
 
@@ -19,29 +21,13 @@ def get_mask(mask_dir, IMG_HEIGHT, IMG_WIDTH):
     mask_dir = glob.glob('./train_data/*/masks/')
     this will return a complete mask by concatenating all the small masks.
     '''  
-    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.float32)
+    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
     
     for mask_f in os.listdir(mask_dir):
         mask_ = imread(os.path.join(mask_dir, mask_f))
-        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT,IMG_WIDTH), mode='constant', preserve_range=True), axis=-1)
+        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT,IMG_WIDTH)), axis=-1)
         mask = np.maximum(mask, mask_)
     return mask
-
-def get_df(img_dir, mask_dir, num_folds=5):
-    '''
-    this func will create a df containing n folds of the given dataset.
-    '''
-    data = {"img_": glob.glob(img_dir), "mask_": glob.glob(mask_dir)}
-    df = pd.DataFrame(data=data)
-    df['kfold'] = -1
-    df = df.sample(frac=1).reset_index(drop=True)
-    kf = model_selection.KFold(n_splits=num_folds)
-
-    for fold_, (_, x) in enumerate(kf.split(df)):
-        for xs in x:
-            df.loc[xs, "kfold"] = fold_
-
-    return df
 
 def format_image(img):
     '''
@@ -62,6 +48,21 @@ def format_mask(mask):
     mask = np.squeeze(np.transpose(mask, (1,2,0)))
     return mask
 
+def split(dataset):
+    split_ratio = 0.20
+    train_size=int(np.round(dataset.__len__()*(1 - split_ratio),0))
+    valid_size=int(np.round(dataset.__len__()*split_ratio,0))
+
+    train_data, valid_data = random_split(dataset, [train_size, valid_size])
+
+    train_loader = DataLoader(dataset=train_data, batch_size=8, shuffle=True)
+
+    val_loader = DataLoader(dataset=valid_data, batch_size=4)
+
+    print("Length of train and valid datas: {}, {}".format(len(train_data), len(valid_data)))
+    return train_loader, val_loader
+
+
 def show_dataset(dataset, n=5):
     '''
     this will display n no of (img, mask) pair from the dataset.
@@ -81,26 +82,12 @@ def show_dataset(dataset, n=5):
     plt.tight_layout()
     plt.show()
 
-def unzip_data(path_to_zip_file, DATA_PATH):
-    '''
-    unzip the data files.
-    '''
-    with zipfile.ZipFile(path_to_zip_file, "r") as data:
-        data.extractall(DATA_PATH)
-
-def visualize_predict(model, valid_loader ,n_images):
-  model = model.eval()
-  figure, ax = plt.subplots(nrows=n_images, ncols=3, figsize=(15, 18))
-  with torch.no_grad():
-    for data,mask in valid_loader:
-        data = torch.autograd.Variable(data, volatile=True).cuda()
-        mask = torch.autograd.Variable(mask, volatile=True).cuda()
-        o = model(data)
-        break
+def visualize_predict(model, data, output, target, valid_loader ,n_images):
+  _, ax = plt.subplots(nrows=n_images, ncols=3, figsize=(15, 18))
   for img_no in range(0, n_images):
-    tm=o[img_no][0].data.cpu().numpy()
+    tm=output[img_no][0].data.cpu().numpy()
     img = data[img_no].data.cpu()
-    msk = mask[img_no].data.cpu()
+    msk = target[img_no].data.cpu()
     img = format_image(img)
     msk = format_mask(msk)
     ax[img_no, 0].imshow(img)
