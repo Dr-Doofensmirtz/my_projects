@@ -28,7 +28,7 @@ def run():
         val_loss = eval_fn(epoch, model, valid_loader, criterion, True)
 
         if (1-val_loss)*100 > accuracy:
-            torch.save(model.state_dict(), config.MODEL_PATH)
+            torch.save(model.state_dict(), config.MODEL_SAVE_PATH)
 
         accuracy = (1-val_loss)*100
 
