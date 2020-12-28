@@ -4,6 +4,7 @@ import os
 from skimage.io import imread
 
 from utils import get_mask
+import config
 
 import torch.nn as nn
 from torch.utils.data import Dataset
@@ -11,8 +12,9 @@ from torch.utils.data import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensor
 
+
 class dataSet(Dataset):
-    def __init__(self,path, transforms=None):
+    def __init__(self, path, transforms=None):
         self.path = path
         self.img_list = os.listdir(self.path)
         self.transforms = transforms
@@ -25,21 +27,21 @@ class dataSet(Dataset):
         mask_folder = os.path.join(self.path, self.img_list[idx], 'masks/')
         img_path = os.path.join(img_folder, os.listdir(img_folder)[0])
 
-        img = imread(img_path)[:,:,:3].astype('float32')
-        mask = get_mask(mask_folder, img.shape[0], img.shape[1])
+        img = imread(img_path)[:, :, :3].astype('float32')
+        mask = get_mask(
+            mask_folder, img.shape[0], img.shape[1]).astype('float32')
 
-        augmented = self.transforms(image = img, mask = mask)
+        augmented = self.transforms(image=img, mask=mask)
         image = augmented['image']
         mask = augmented['mask']
-        mask = mask[0].permute(2,0,1)
+        mask = mask[0].permute(2, 0, 1)
 
-        return image,mask
-
+        return image, mask
 
 
 class transform:
     train_transform = A.Compose([
-        A.Resize(128,128),
+        A.Resize(config.IMG_SIZE, config.IMG_SIZE),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         A.HorizontalFlip(p=0.25),
         A.VerticalFlip(p=0.25),
