@@ -2,8 +2,9 @@ albumentations
 matplotlib
 numpy
 pandas
-pytorch
 scikit-image
 scikit-learn
-torchvision
+flask
+pillow
 tqdm
+torch

@@ -3,7 +3,7 @@ import os
 
 from skimage.io import imread
 
-from utils import get_mask
+from utils import get_mask, show_dataset
 import config
 
 import torch.nn as nn
@@ -16,7 +16,7 @@ from albumentations.pytorch import ToTensor
 class dataSet(Dataset):
     def __init__(self, path, transforms=None):
         self.path = path
-        self.img_list = os.listdir(self.path)
+        self.img_list = os.listdir(self.path)[:200]
         self.transforms = transforms
 
     def __len__(self):
@@ -47,3 +47,8 @@ class transform:
         A.VerticalFlip(p=0.25),
         ToTensor()
     ])
+
+
+# if __name__ == "__main__":
+#     dataset_ = dataSet(config.DATA_PATH, transform.train_transform)
+#     show_dataset(dataset_, 5)
